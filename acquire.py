@@ -264,4 +264,7 @@ def transform_data(df, extra_stopwords= []):
     # Join lists of words back into strings
     df['lematized'] = df['lematized'].apply(lambda x: ' '.join(x))
     
+    valid_languages = ['Python', 'C++', 'Markdown']
+    df.loc[~df['language'].isin(valid_languages), 'language'] = 'Other'
+    
     return df
