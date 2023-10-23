@@ -11,6 +11,7 @@ import json
 from typing import Dict, List, Optional, Union, cast
 import requests
 import numpy as np
+import pandas as pd
 import random
 from bs4 import BeautifulSoup
 
@@ -132,3 +133,30 @@ def scrape_github_data() -> List[Dict[str, str]]:
 if __name__ == "__main__":
     data = scrape_github_data()
     json.dump(data, open("data2.json", "w"), indent=1)
+    
+    
+def process_all_repos():
+    # Check if cached data exists
+    if os.path.exists('github_repo_processed.csv'):
+        df = pd.read_csv('github_repo_processed.csv')
+        
+        # Fill null values in language column with "Markdown"
+        df = df.fillna({"language": "Markdown"})
+    else:
+        # Get list of repo links
+        repo_links = a.get_github_repos()
+
+        # Process list of repo links and add to dataframe
+        data = []
+        for link in repo_links:
+            out = a.process_repo(link)
+            data.append(out)
+        df = pd.DataFrame(data)
+
+        # Cache processed data as CSV file
+        df.to_csv('github_repo_processed.csv', index=False)
+        
+        # Fill null values in language column with "Markdown"
+        df = df.fillna({"language": "Markdown"})
+
+    return df.astype({"repo": "string", "language": "string", "readme_contents": "string"})
