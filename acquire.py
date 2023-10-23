@@ -142,14 +142,15 @@ if __name__ == "__main__":
     
 def process_all_repos():
     # Check if cached data exists
-    if os.path.exists('github_repo_processed.csv'):
-        df = pd.read_csv('github_repo_processed.csv')
+    if os.path.exists('all_facebook_repos.csv'):
+        df = pd.read_csv('all_facebook_repos.csv')
         
         # Fill null values in language column with "Markdown"
         df = df.fillna({"language": "Markdown"})
+        df = df.drop_duplicates(subset=['repo'],keep='first')
     else:
         # Get list of repo links
-        repo_links = a.get_github_repos()
+        repo_links = get_github_repos()
 
         # Process list of repo links and add to dataframe
         data = []
@@ -159,7 +160,7 @@ def process_all_repos():
         df = pd.DataFrame(data)
 
         # Cache processed data as CSV file
-        df.to_csv('github_repo_processed.csv', index=False)
+        df.to_csv('all_facebook_repos.csv', index=False)
         
         # Fill null values in language column with "Markdown"
         df = df.fillna({"language": "Markdown"})
