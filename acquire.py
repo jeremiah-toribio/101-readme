@@ -14,6 +14,11 @@ import numpy as np
 import pandas as pd
 import random
 from bs4 import BeautifulSoup
+import unicodedata
+import re
+import nltk
+from nltk.tokenize.toktok import ToktokTokenizer
+from nltk.corpus import stopwords
 
 from env import github_token, github_username
 
@@ -54,7 +59,7 @@ def get_github_repos():
     
 
 
-REPOS = get_github_repos()
+# REPOS = get_github_repos()
  
 
 headers = {"Authorization": f"token {github_token}", "User-Agent": github_username}
@@ -127,7 +132,7 @@ def scrape_github_data() -> List[Dict[str, str]]:
     """
     Loop through all of the repos and process them. Returns the processed data.
     """
-    return [process_repo(repo) for repo in REPOS]
+    return [process_repo(repo) for repo in get_github_repos()]
 
 
 if __name__ == "__main__":
@@ -160,3 +165,102 @@ def process_all_repos():
         df = df.fillna({"language": "Markdown"})
 
     return df.astype({"repo": "string", "language": "string", "readme_contents": "string"})
+
+
+######################  PREPARE ########################
+def basic_clean(string):
+    '''
+    This function takes in the original text.
+    The text is all lowercased, 
+    the text is encoded in ascii and any characters that are not ascii are ignored.
+    The text is then decoded in utf-8 and any characters that are not ascii are ignored
+    Additionally, special characters are all removed.
+    A clean article is then returned
+    '''
+    #lowercase
+    string = string.lower()
+    
+    #normalize
+    string = unicodedata.normalize('NFKD', string)\
+    .encode('ascii', 'ignore')\
+    .decode('utf-8', 'ignore')
+    string = string.replace('/',' ')
+    string = string.replace('-',' ')
+    #remove special characters and replaces it with blank
+    string = re.sub(r"[^a-z0-9'\s]", '', string)
+    
+    return string
+
+def tokenize(string):
+    '''
+    This function takes in a string
+    and returns the string as individual tokens put back into the string
+    '''
+    #create the tokenizer
+    tokenizer = nltk.tokenize.ToktokTokenizer()
+
+    #use the tokenizer
+    string = tokenizer.tokenize(string, return_str = True)
+
+    return string
+
+def lemmatize(string):
+    '''
+    This function takes in a string
+    and returns the lemmatized word joined back into the string
+    '''
+    #create the lemmatizer
+    wnl = nltk.stem.WordNetLemmatizer()
+    
+    #look at the article 
+    lemmas = [wnl.lemmatize(word) for word in string.split()]
+    
+    #join lemmatized words into article
+    string = ' '.join(lemmas)
+
+    return string
+
+def remove_stopwords(string, extra_words = [], exclude_words = []):
+    '''
+    This function takes in text, extra words and exclude words
+    and returns a list of text with stopword removed
+    '''
+    #create stopword list
+    stopword_list = stopwords.words('english')
+    
+    #remove excluded words from list
+    stopword_list = set(stopword_list) - set(exclude_words)
+    
+    #add the extra words to the list
+    stopword_list = stopword_list.union(set(extra_words))
+    
+    #split the string into different words
+    words = string.split()
+    
+    #create a list of words that are not in the list
+    filtered_words = [word for word in words if word not in stopword_list]
+    
+    #join the words that are not stopwords (filtered words) back into the string
+    string = ' '.join(filtered_words)
+    
+    return string
+
+def transform_data(df, extra_stopwords= []):
+    df = df.rename(columns={'readme_contents':'original'})
+    # df['clean'] = cleaned and tokenized version with stopwords removed
+    df['clean'] = df['original'].apply(basic_clean
+                                      ).apply(tokenize
+                                             ).apply(remove_stopwords, extra_words=extra_stopwords)
+    # df['lematized'] = lemmatized version of clean data
+    df['lematized'] = df['clean'].apply(lemmatize)
+    
+    # Split lemmatized strings into lists of words
+    df['lematized'] = df['lematized'].apply(lambda x: x.split())
+    
+    # Drop words longer than 15 characters
+    df['lematized'] = df['lematized'].apply(lambda x: [word for word in x if len(word) <= 15])
+    
+    # Join lists of words back into strings
+    df['lematized'] = df['lematized'].apply(lambda x: ' '.join(x))
+    
+    return df
