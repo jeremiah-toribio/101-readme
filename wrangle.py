@@ -278,6 +278,14 @@ def transform_data(df, extra_stopwords= []):
     # Join lists of words back into strings
     df['lematized'] = df['lematized'].apply(lambda x: ' '.join(x))
     
+    # Drop rows where langauge is Jupyter Notebook
+    df = df[df.language != 'Jupyter Notebook']
+    
+    valid_languages = ['Python', 'C++', 'Markdown']
+    df.loc[~df['language'].isin(valid_languages), 'language'] = 'Other'
+    
+    # Drop unamed column
+    df = df.drop(columns=['Unnamed: 0'])    
     return df
 
 
