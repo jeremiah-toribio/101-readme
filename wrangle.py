@@ -15,6 +15,8 @@ import requests
 # arrays/df
 import numpy as np
 import pandas as pd
+# stats
+from scipy import stats
 # viz
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -283,7 +285,9 @@ def transform_data(df, extra_stopwords= []):
 ##########                                      ##########
 ##########              EXPLORE                 ##########
 ##########                                      ##########
-def language_distributions():
+
+    # Viz
+def language_distributions(df):
     '''
     Showing all distributions of length of readme words.
     '''
@@ -302,3 +306,84 @@ def language_distributions():
             sns.histplot(df.len_lematized)
             plt.show()
         print('+ + + + + + + + + + + + + + + +')
+
+    # stats
+def check_correlation(feature, compare):
+    '''
+    - Shapiro's to check distribution
+    - After distribution is determined, use pearsons or spearman r 
+    '''
+    α = .05
+    sr,sp = stats.shapiro(feature)
+
+    if sp > α:
+        print(f"Normal distribution, using pearson r")
+        r, p = stats.pearsonr(compare, feature)
+        if p < α:
+            return print(f"""Reject the null hypothesis. There is a linear correlation.
+        Spearman’s r: {r:2f}
+        P-value: {p}""")
+        else:
+            return print(f"""We fail to reject the null hypothesis that there is a linear correlation.
+            Spearman’s r: {r:2f}
+            P-value: {p}""")
+    else:
+        print(f"NOT a normal distribution, spearman r")
+        r, p = stats.spearmanr(compare, feature)
+        if p < α:
+            return print(f"""Reject the null hypothesis. There is a linear correlation.
+        Pearson's r: {r:2f}
+        P-value: {p}""")
+        else:
+            return print(f"""We fail to reject the null hypothesis that there is a linear correlation.
+            Pearson's r: {r:2f}
+            P-value: {p}""")
+        
+def check_p(p):
+    '''
+    checks p value to see association to a, depending on outcome will print
+    relative statement
+    '''
+    α = .05
+    if p < α:
+        return print(f'We can reject the null hypothesis with a p-score of:',{p})
+    else:
+        return print(f'We fail to reject the null hypothesis with a p-score of:',{p})
+    
+    # 1 sample ttest
+def t_test(feature, compare):
+    '''
+    For independent feature testing
+    '''
+    samples = feature, compare
+    α = .05
+    lv, p = stats.levene(*samples, center='median', proportiontocut=0.05)
+
+    if p > α:
+        print(f'Equal Variance with a p-score of:{p}')
+        t_stat, p = stats.ttest_1samp(feature,compare,equal_var=True)
+    else:
+        print(f'INNEQUAL Variance with a p-score of:{p}')
+        t_stat, p = stats.ttest_1samp(feature,compare,equal_var=False)
+
+    return check_p(p)
+
+    # chi2 
+def chi2_test(col1, col2, a=.05):
+    '''
+    NOTE: Requires stats from scipy in order to function
+    A faster way to test two columns desired for cat vs. cat statistical analysis.
+
+    Default α is set to .05.
+
+    Outputs crosstab and respective chi2 relative metrics.
+    '''
+    observed = pd.crosstab(col1, col2)
+    chi2, p, degf, expected = stats.chi2(observed)
+    
+    if p < a:
+        print(f'We can reject the null hypothesis with a p-score of:',{p})
+    else:
+        print(f'We fail to reject the null hypothesis with a p-score of:',{p})
+    
+    return observed
