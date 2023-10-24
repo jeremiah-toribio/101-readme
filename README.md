@@ -29,37 +29,35 @@ language is used.
 2. Clean said data
 3. Explore and analyze data for better insights on relative context to language\
     a. Determine our baseline prediction\
-        1. \
-        2. \
-        3. 
+    b. Determine our stop words\
+    c. View most commomn ngrams\
+    d. Use stats testing\ 
+4. Model using TFIDF
+5. Document conclusions, recommendations, and next steps 
 
 ## Data Dictionary
 --- 
 | Feature        | Definition                                   |
 | ---            | ---                                          |
-| open  | the price of currency at the start of the reported time frame |
-| close | **TARGET** the price of currency at the end of reported time frame |
-| high | the highest price of the reported time frame |
-| low   | the lowest price of the reported time frame |
-| volume  | a cumulation of trade volume data from the largest volume exchanges |
-| month   | month of the year |
-| weekday   | a text indicator of what day of the week it is |
+| Unigrams  | Most used words by programing languages |
+| Bigrams | Most common words grouped by 2 per programing languages |
+| Trigram | Most common words grouped by 3 per programing languages  |
+
 
 
 ## Reproducability Requirements
 ---
 1. Clone repo
-RUN OPTIONS:\
-    2a. Local machine must have python 3.7 and prophet downloaded\
-    2b. Using Google Colab drop wrangle into files
-3. Run notebook
+2. Run notebook
 
 ## Conclusions 
-- Volatility of Ethereum makes it very hard to predict seasonality / trend on a macro scale but with the recent
-consistency there's sufficient data to be able to make a fairly close prediction
-- The nature of price is that is a quasi-schotastic value that has lots of factors even outside that of which\
-can be seen on a time scale. Such as news, improvements and maybe even downtime
+- Because Facebook's github repos are primaraly python, our model is beneficial to recuters for the Facebook reasearch team. 
+- Beat baseline and can accuracy predict python 
+- Research teams success depends on their ability to collaborate. 
+- Potential candidate’s GitHub’s can be vetted on their knowledge and experience with top programing languages. 
+- Add more repositories form different departments to accurately predict programing languages from any department 
 
 ## Recommendation
-- Utilize other models outside of a time series -- ex. utilizing trade volume, open, high and low for a regression model
-- Cross validation to improve model accuracy
+- Show facebook research team recruiters the most popular programing languages. 
+- Recruiters can use this to scan an applicants GitHub to see if they can be placed in a facebook research team
+- Compare to other departments and see how this model performs 
