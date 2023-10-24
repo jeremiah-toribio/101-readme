@@ -267,7 +267,7 @@ def transform_data(df, extra_stopwords= []):
                                       ).apply(tokenize
                                              ).apply(remove_stopwords, extra_words=extra_stopwords)
     # df['lematized'] = lemmatized version of clean data
-    df['lematized'] = df['clean'].apply(lemmatize)
+    df['lematized'] = df['clean'].apply(lemmatize).apply(remove_stopwords, extra_words=extra_stopwords)
     
     # Split lemmatized strings into lists of words
     df['lematized'] = df['lematized'].apply(lambda x: x.split())
