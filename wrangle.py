@@ -281,7 +281,9 @@ def transform_data(df, extra_stopwords= []):
     
     valid_languages = ['Python', 'C++', 'Markdown']
     df.loc[~df['language'].isin(valid_languages), 'language'] = 'Other'
-        
+    
+    # Drop unamed column
+    df = df.drop(columns=['Unnamed: 0'])    
     return df
 
 
