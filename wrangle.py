@@ -6,13 +6,21 @@ After doing so, run it like this:
     python acquire.py
 To create the `data.json` file that contains the data.
 """
+# os/file access
 import os
 import json
 from typing import Dict, List, Optional, Union, cast
+# http request 
 import requests
+# arrays/df
 import numpy as np
 import pandas as pd
+# viz
+import seaborn as sns
+import matplotlib.pyplot as plt
+# random
 import random
+# nlp
 from bs4 import BeautifulSoup
 import unicodedata
 import re
@@ -23,14 +31,18 @@ from nltk.corpus import stopwords
 from env import github_token, github_username
 
 
-# Define user agents for request headers
+##########                                      ##########
+##########              ACQUIRE                 ##########
+##########                                      ##########
+
+    # Define user agents for request headers
 user_agents = [
         "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0",
         "Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0",
         "Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0"
     ]
 
-# Randomly select a user agent
+    # Randomly select a user agent
 headers = {'User-Agent': random.choice(user_agents)}
 
 
@@ -43,7 +55,6 @@ headers = {'User-Agent': random.choice(user_agents)}
 
 
 def get_github_repos():
-    
     
     base_url =  'https://github.com/orgs/facebookresearch/repositories'
     url_template = base_url + '?page={}'
@@ -167,8 +178,9 @@ def process_all_repos():
 
     return df.astype({"repo": "string", "language": "string", "readme_contents": "string"})
 
-
-######################  PREPARE ########################
+##########                                      ##########
+##########              PREPARE                 ##########
+##########                                      ##########
 def basic_clean(string):
     '''
     This function takes in the original text.
@@ -264,10 +276,29 @@ def transform_data(df, extra_stopwords= []):
     # Join lists of words back into strings
     df['lematized'] = df['lematized'].apply(lambda x: ' '.join(x))
     
-    # Drop rows where langauge is Jupyter Notebook
-    df = df[df.language != 'Jupyter Notebook']
-    
-    valid_languages = ['Python', 'C++', 'Markdown']
-    df.loc[~df['language'].isin(valid_languages), 'language'] = 'Other'
-    
     return df
+
+
+
+##########                                      ##########
+##########              EXPLORE                 ##########
+##########                                      ##########
+def language_distributions():
+    '''
+    Showing all distributions of length of readme words.
+    '''
+    # Creating a list for our languages we want to be accessed
+    languages = ['Python', 'C++', 'Other', 'Markdown','All']
+
+    # Loop to check by language
+    for language in languages:
+        print(f'Checking distributions of {language}:')
+        if language != 'All':
+            sns.histplot(df.len_lematized[df.language == language])
+            plt.xlabel(f'{language} ReadMe Len Distribution')
+            plt.show()
+        # Else indicates that we are looking for All
+        else:
+            sns.histplot(df.len_lematized)
+            plt.show()
+        print('+ + + + + + + + + + + + + + + +')
