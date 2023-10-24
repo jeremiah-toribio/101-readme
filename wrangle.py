@@ -278,12 +278,6 @@ def transform_data(df, extra_stopwords= []):
     # Join lists of words back into strings
     df['lematized'] = df['lematized'].apply(lambda x: ' '.join(x))
     
-    # Drop rows where langauge is Jupyter Notebook
-    df = df[df.language != 'Jupyter Notebook']
-    
-    valid_languages = ['Python', 'C++', 'Markdown']
-    df.loc[~df['language'].isin(valid_languages), 'language'] = 'Other'
-        
     return df
 
 
@@ -357,7 +351,18 @@ def check_p(p):
         return print(f'We fail to reject the null hypothesis with a p-score of:',{p})
     
     # 1 sample ttest
-def t_test(feature, compare):
+
+def two_samp(feature, compare, normal):
+    '''
+    For independent feature testing
+    '''
+    if normal == True:
+        t_stat, p = stats.ttest_1samp(feature,compare)
+    else:
+        _, p = stats.mannwhitneyu(feature,compare)
+    return check_p(p)
+
+def two_samp(feature, compare, normal):
     '''
     For independent feature testing
     '''
@@ -365,17 +370,20 @@ def t_test(feature, compare):
     α = .05
     lv, p = stats.levene(*samples, center='median', proportiontocut=0.05)
 
-    if p > α:
-        print(f'Equal Variance with a p-score of:{p}')
-        t_stat, p = stats.ttest_1samp(feature,compare,equal_var=True)
+    if normal == True:
+        if p > α:
+            print(f'Equal Variance with a p-score of:{p}')
+            t_stat, p = stats.ttest_ind(feature,compare,equal_var=True)
+        else:
+            print(f'INNEQUAL Variance with a p-score of:{p}')
+            t_stat, p = stats.ttest_ind(feature,compare,equal_var=False)
     else:
-        print(f'INNEQUAL Variance with a p-score of:{p}')
-        t_stat, p = stats.ttest_1samp(feature,compare,equal_var=False)
+        _, p = stats.mannwhitneyu(feature,compare)
 
     return check_p(p)
 
     # chi2 
-def chi2_test(col1, col2, a=.05):
+def chi2_test(col1, col2, a=.05, contingency=False):
     '''
     NOTE: Requires stats from scipy in order to function
     A faster way to test two columns desired for cat vs. cat statistical analysis.
@@ -384,12 +392,17 @@ def chi2_test(col1, col2, a=.05):
 
     Outputs crosstab and respective chi2 relative metrics.
     '''
-    observed = pd.crosstab(col1, col2)
-    chi2, p, degf, expected = stats.chi2(observed)
-    
-    if p < a:
-        print(f'We can reject the null hypothesis with a p-score of:',{p})
+    if contingency == False:
+        observed = pd.crosstab(col1, col2)
+        chi2, p, degf, expected = stats.chisquare(observed)
     else:
-        print(f'We fail to reject the null hypothesis with a p-score of:',{p})
+        if contingency == True:
+            observed = pd.crosstab(col1, col2)
+            chi2, p, degf, expected = stats.chi2_contingency(observed)
     
+        if p < a:
+            print(f'We can reject the null hypothesis with a p-score of:',{p})
+        else:
+            print(f'We fail to reject the null hypothesis with a p-score of:',{p})
+
     return observed
